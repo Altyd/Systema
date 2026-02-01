@@ -7,6 +7,15 @@ interface ArchitectureStore {
   setCurrentArchitecture: (architecture: Architecture | null) => void;
   updateArchitectureMetadata: (updates: Partial<Pick<Architecture, 'name' | 'description' | 'problemStatement' | 'constraints' | 'assumptions' | 'nonGoals' | 'knownFailureScenarios'>>) => void;
   
+  // Undo/Redo
+  history: Architecture[];
+  historyIndex: number;
+  pushHistory: () => void;
+  undo: () => void;
+  redo: () => void;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
+  
   // Components
   addComponent: (component: Component) => void;
   updateComponent: (id: string, updates: Partial<Component>) => void;
@@ -51,8 +60,62 @@ export const useArchitectureStore = create<ArchitectureStore>((set, get) => ({
   comments: [],
   warnings: [],
   simulationMode: false,
+  history: [],
+  historyIndex: -1,
 
-  setCurrentArchitecture: (architecture) => set({ currentArchitecture: architecture }),
+  setCurrentArchitecture: (architecture) => set({ currentArchitecture: architecture, history: [], historyIndex: -1 }),
+
+  pushHistory: () => {
+    const state = get();
+    if (!state.currentArchitecture) return;
+    
+    // Create a deep copy of the current architecture
+    const snapshot = JSON.parse(JSON.stringify(state.currentArchitecture));
+    
+    // Remove any history after the current index (for redo after undo)
+    const newHistory = state.history.slice(0, state.historyIndex + 1);
+    newHistory.push(snapshot);
+    
+    // Limit history to last 50 states to prevent memory issues
+    const limitedHistory = newHistory.slice(-50);
+    
+    set({
+      history: limitedHistory,
+      historyIndex: limitedHistory.length - 1,
+    });
+  },
+
+  undo: () => {
+    const state = get();
+    if (state.historyIndex > 0) {
+      const previousState = state.history[state.historyIndex - 1];
+      set({
+        currentArchitecture: JSON.parse(JSON.stringify(previousState)),
+        historyIndex: state.historyIndex - 1,
+      });
+    }
+  },
+
+  redo: () => {
+    const state = get();
+    if (state.historyIndex < state.history.length - 1) {
+      const nextState = state.history[state.historyIndex + 1];
+      set({
+        currentArchitecture: JSON.parse(JSON.stringify(nextState)),
+        historyIndex: state.historyIndex + 1,
+      });
+    }
+  },
+
+  canUndo: () => {
+    const state = get();
+    return state.historyIndex > 0;
+  },
+
+  canRedo: () => {
+    const state = get();
+    return state.historyIndex < state.history.length - 1;
+  },
 
   updateArchitectureMetadata: (updates) =>
     set((state) => {
@@ -66,7 +129,8 @@ export const useArchitectureStore = create<ArchitectureStore>((set, get) => ({
       };
     }),
 
-  addComponent: (component) =>
+  addComponent: (component) => {
+    get().pushHistory();
     set((state) => {
       if (!state.currentArchitecture) return state;
       return {
@@ -76,7 +140,8 @@ export const useArchitectureStore = create<ArchitectureStore>((set, get) => ({
           updatedAt: new Date().toISOString(),
         },
       };
-    }),
+    });
+  },
 
   updateComponent: (id, updates) =>
     set((state) => {
@@ -107,7 +172,8 @@ export const useArchitectureStore = create<ArchitectureStore>((set, get) => ({
       };
     }),
 
-  deleteMultipleComponents: (ids) =>
+  deleteMultipleComponents: (ids) => {
+    get().pushHistory();
     set((state) => {
       if (!state.currentArchitecture) return state;
       const idsSet = new Set(ids);
@@ -121,9 +187,11 @@ export const useArchitectureStore = create<ArchitectureStore>((set, get) => ({
           updatedAt: new Date().toISOString(),
         },
       };
-    }),
+    });
+  },
 
-  addConnection: (connection) =>
+  addConnection: (connection) => {
+    get().pushHistory();
     set((state) => {
       if (!state.currentArchitecture) return state;
       return {
@@ -133,7 +201,8 @@ export const useArchitectureStore = create<ArchitectureStore>((set, get) => ({
           updatedAt: new Date().toISOString(),
         },
       };
-    }),
+    });
+  },
 
   updateConnection: (id, updates) =>
     set((state) => {
@@ -149,7 +218,8 @@ export const useArchitectureStore = create<ArchitectureStore>((set, get) => ({
       };
     }),
 
-  deleteConnection: (id) =>
+  deleteConnection: (id) => {
+    get().pushHistory();
     set((state) => {
       if (!state.currentArchitecture) return state;
       return {
@@ -159,7 +229,8 @@ export const useArchitectureStore = create<ArchitectureStore>((set, get) => ({
           updatedAt: new Date().toISOString(),
         },
       };
-    }),
+    });
+  },
 
   addAnnotation: (annotation) =>
     set((state) => {

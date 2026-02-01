@@ -86,12 +86,7 @@ function App() {
     loadInitialArchitecture();
   }, [user, authLoading, setCurrentArchitecture, loadedForUserId]);
 
-  // Open metadata panel when a node is selected
-  useEffect(() => {
-    if (selectedNodeId) {
-      toggleMetadataPanel();
-    }
-  }, [selectedNodeId]);
+  // Removed auto-open metadata panel effect to allow manual re-opening
 
   const handleSave = async () => {
     if (!user) {

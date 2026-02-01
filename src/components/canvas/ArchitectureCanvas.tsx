@@ -40,8 +40,13 @@ const ArchitectureCanvasInner = () => {
     addConnection,
     deleteMultipleComponents,
     setSelectedNodeId,
+    toggleMetadataPanel,
     simulationMode,
     toggleSimulationMode,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   } = useArchitectureStore();
 
   const { screenToFlowPosition } = useReactFlow();
@@ -57,6 +62,11 @@ const ArchitectureCanvasInner = () => {
     x: number;
     y: number;
     flowPosition: { x: number; y: number };
+  } | null>(null);
+  const [edgeContextMenu, setEdgeContextMenu] = useState<{
+    x: number;
+    y: number;
+    edgeId: string;
   } | null>(null);
   const [deletingNodes, setDeletingNodes] = useState<Set<string>>(new Set());
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -99,8 +109,19 @@ const ArchitectureCanvasInner = () => {
 
   // Update node positions when dragged
   const onNodeDragStop = useCallback(
-    (_event: React.MouseEvent, node: Node) => {
-      updateComponent(node.id, { position: node.position });
+    (_event: React.MouseEvent, node: Node, allNodes: Node[]) => {
+      // If multiple nodes are selected, update all of them
+      const selectedNodes = allNodes.filter(n => n.selected);
+      
+      if (selectedNodes.length > 1) {
+        // Update all selected nodes' positions
+        selectedNodes.forEach(selectedNode => {
+          updateComponent(selectedNode.id, { position: selectedNode.position });
+        });
+      } else {
+        // Single node drag
+        updateComponent(node.id, { position: node.position });
+      }
     },
     [updateComponent]
   );
@@ -141,9 +162,19 @@ const ArchitectureCanvasInner = () => {
 
   const onNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
+      // Only set selection, don't open metadata panel
       setSelectedNodeId(node.id);
     },
     [setSelectedNodeId]
+  );
+
+  const onNodeDoubleClick = useCallback(
+    (_event: React.MouseEvent, node: Node) => {
+      // Double-click opens the metadata panel
+      setSelectedNodeId(node.id);
+      toggleMetadataPanel();
+    },
+    [setSelectedNodeId, toggleMetadataPanel]
   );
 
   const handleAddComponent = () => {
@@ -218,11 +249,13 @@ const ArchitectureCanvasInner = () => {
     // Create a map from old ID to new ID
     const idMap = new Map<string, string>();
     const timestamp = Date.now();
+    const newNodeIds: string[] = [];
     
     // First, create all new components
     nodesToDuplicate.forEach((component, index) => {
       const newId = `component-${timestamp}-${index}`;
       idMap.set(component.id, newId);
+      newNodeIds.push(newId);
       
       const newComponent = {
         ...component,
@@ -257,7 +290,37 @@ const ArchitectureCanvasInner = () => {
     });
     
     setContextMenu(null);
-  }, [contextMenu, currentArchitecture, addComponent, addConnection]);
+    
+    // Select the newly duplicated nodes after a brief delay to ensure they're rendered
+    setTimeout(() => {
+      setNodes(nds => nds.map(node => ({
+        ...node,
+        selected: newNodeIds.includes(node.id)
+      })));
+    }, 100);
+  }, [contextMenu, currentArchitecture, addComponent, addConnection, setNodes]);
+
+  // Handle right-click on edges
+  const onEdgeContextMenu = useCallback((event: React.MouseEvent, edge: Edge) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    setEdgeContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      edgeId: edge.id,
+    });
+    setContextMenu(null);
+    setPaneContextMenu(null);
+  }, []);
+
+  // Handle delete edge from context menu
+  const handleDeleteEdge = useCallback(() => {
+    if (edgeContextMenu && currentArchitecture) {
+      useArchitectureStore.getState().deleteConnection(edgeContextMenu.edgeId);
+      setEdgeContextMenu(null);
+    }
+  }, [edgeContextMenu, currentArchitecture]);
 
   // Handle right-click on pane (empty space) to show add component menu
   const onPaneContextMenu = useCallback((event: React.MouseEvent) => {
@@ -275,6 +338,7 @@ const ArchitectureCanvasInner = () => {
       flowPosition,
     });
     setContextMenu(null); // Close node context menu if open
+    setEdgeContextMenu(null);
   }, [screenToFlowPosition]);
 
   // Handle adding component at position from pane context menu
@@ -291,6 +355,7 @@ const ArchitectureCanvasInner = () => {
     const handleClick = () => {
       setContextMenu(null);
       setPaneContextMenu(null);
+      setEdgeContextMenu(null);
     };
     
     const handleContextMenu = (e: MouseEvent) => {
@@ -310,7 +375,318 @@ const ArchitectureCanvasInner = () => {
       window.removeEventListener('click', handleClick);
       window.removeEventListener('contextmenu', handleContextMenu);
     };
-  }, [contextMenu, paneContextMenu]);
+  }, [contextMenu, paneContextMenu, edgeContextMenu]);
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Skip if typing in an input/textarea
+      const target = e.target as HTMLElement;
+      const isTyping = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+      
+      // Ctrl/Cmd + Z - undo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey && !isTyping) {
+        if (canUndo()) {
+          e.preventDefault();
+          undo();
+          console.log('Undo');
+        }
+        return;
+      }
+      
+      // Ctrl/Cmd + Y or Ctrl/Cmd + Shift + Z - redo
+      if (((e.ctrlKey || e.metaKey) && e.key === 'y') || 
+          ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z')) {
+        if (canRedo() && !isTyping) {
+          e.preventDefault();
+          redo();
+          console.log('Redo');
+        }
+        return;
+      }
+      
+      // Delete key - delete selected edges
+      if ((e.key === 'Delete' || e.key === 'Backspace') && !isTyping) {
+        const selectedEdges = edges.filter(edge => edge.selected);
+        if (selectedEdges.length > 0) {
+          e.preventDefault();
+          selectedEdges.forEach(edge => {
+            if (currentArchitecture) {
+              useArchitectureStore.getState().deleteConnection(edge.id);
+            }
+          });
+          return;
+        }
+      }
+
+      // Ctrl/Cmd + C - copy selected nodes
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c' && !e.shiftKey && !isTyping) {
+        const selectedNodes = nodes.filter(n => n.selected);
+        if (selectedNodes.length > 0 && currentArchitecture) {
+          e.preventDefault();
+          const nodeIdsSet = new Set(selectedNodes.map(n => n.id));
+          const nodesToCopy = currentArchitecture.components.filter(c => nodeIdsSet.has(c.id));
+          const connectionsToCopy = currentArchitecture.connections.filter(
+            conn => nodeIdsSet.has(conn.source) && nodeIdsSet.has(conn.target)
+          );
+          
+          const copyData = {
+            type: 'systema-nodes',
+            nodes: nodesToCopy,
+            connections: connectionsToCopy,
+          };
+          
+          // Store in sessionStorage for paste
+          sessionStorage.setItem('systema-clipboard', JSON.stringify(copyData));
+          
+          // Also try to copy to system clipboard
+          navigator.clipboard.writeText(JSON.stringify(copyData, null, 2)).catch(() => {});
+          
+          console.log('Copied nodes:', nodesToCopy.length, 'connections:', connectionsToCopy.length);
+        }
+      }
+
+      // Ctrl/Cmd + V - paste copied nodes or import architecture
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v' && !e.shiftKey && !isTyping) {
+        e.preventDefault();
+        
+        // Try system clipboard first (to support external JSON paste)
+        navigator.clipboard.readText().then(text => {
+          try {
+            const data = JSON.parse(text);
+            
+            // Check if it's valid architecture data
+            if (data.type === 'systema-nodes' && data.nodes) {
+              // Paste nodes (internal format)
+              const idMap = new Map<string, string>();
+              const timestamp = Date.now();
+              const newNodeIds: string[] = [];
+              
+              data.nodes.forEach((component: Component, index: number) => {
+                const newId = `component-${timestamp}-${index}`;
+                idMap.set(component.id, newId);
+                newNodeIds.push(newId);
+                
+                const newComponent = {
+                  ...component,
+                  id: newId,
+                  name: `${component.name} (Copy)`,
+                  position: {
+                    x: component.position.x + 50,
+                    y: component.position.y + 50,
+                  },
+                };
+                addComponent(newComponent);
+              });
+              
+              // Paste connections
+              data.connections?.forEach((connection: Connection, index: number) => {
+                const newSourceId = idMap.get(connection.source);
+                const newTargetId = idMap.get(connection.target);
+                
+                if (newSourceId && newTargetId) {
+                  const newConnection = {
+                    ...connection,
+                    id: `connection-${timestamp}-${index}`,
+                    source: newSourceId,
+                    target: newTargetId,
+                  };
+                  addConnection(newConnection);
+                }
+              });
+              
+              // Select the newly pasted nodes
+              setTimeout(() => {
+                setNodes(nds => nds.map(node => ({
+                  ...node,
+                  selected: newNodeIds.includes(node.id)
+                })));
+              }, 100);
+              
+              console.log('Pasted nodes from system clipboard:', data.nodes.length);
+            } else if (data.components || data.name) {
+              // It's a full architecture - import components
+              const idMap = new Map<string, string>();
+              const timestamp = Date.now();
+              const components = data.components || [];
+              const connections = data.connections || [];
+              const newNodeIds: string[] = [];
+              
+              components.forEach((component: Component, index: number) => {
+                const newId = `component-${timestamp}-${index}`;
+                idMap.set(component.id, newId);
+                newNodeIds.push(newId);
+                
+                const newComponent = {
+                  ...component,
+                  id: newId,
+                  position: {
+                    x: component.position.x + 100,
+                    y: component.position.y + 100,
+                  },
+                };
+                addComponent(newComponent);
+              });
+              
+              connections.forEach((connection: Connection, index: number) => {
+                const newSourceId = idMap.get(connection.source);
+                const newTargetId = idMap.get(connection.target);
+                
+                if (newSourceId && newTargetId) {
+                  const newConnection = {
+                    ...connection,
+                    id: `connection-${timestamp}-${index}`,
+                    source: newSourceId,
+                    target: newTargetId,
+                  };
+                  addConnection(newConnection);
+                }
+              });
+              
+              // Select the newly imported nodes
+              setTimeout(() => {
+                setNodes(nds => nds.map(node => ({
+                  ...node,
+                  selected: newNodeIds.includes(node.id)
+                })));
+              }, 100);
+              
+              console.log('Imported architecture from system clipboard with', components.length, 'components');
+            }
+          } catch (err) {
+            // System clipboard doesn't have valid JSON, try sessionStorage fallback
+            console.log('System clipboard does not contain valid JSON, trying sessionStorage');
+            
+            const clipboardData = sessionStorage.getItem('systema-clipboard');
+            if (clipboardData) {
+              try {
+                const data = JSON.parse(clipboardData);
+                
+                if (data.type === 'systema-nodes' && data.nodes) {
+                  // Paste nodes
+                  const idMap = new Map<string, string>();
+                  const timestamp = Date.now();
+                  const newNodeIds: string[] = [];
+                  
+                  data.nodes.forEach((component: Component, index: number) => {
+                    const newId = `component-${timestamp}-${index}`;
+                    idMap.set(component.id, newId);
+                    newNodeIds.push(newId);
+                    
+                    const newComponent = {
+                      ...component,
+                      id: newId,
+                      name: `${component.name} (Copy)`,
+                      position: {
+                        x: component.position.x + 50,
+                        y: component.position.y + 50,
+                      },
+                    };
+                    addComponent(newComponent);
+                  });
+                  
+                  // Paste connections
+                  data.connections?.forEach((connection: Connection, index: number) => {
+                    const newSourceId = idMap.get(connection.source);
+                    const newTargetId = idMap.get(connection.target);
+                    
+                    if (newSourceId && newTargetId) {
+                      const newConnection = {
+                        ...connection,
+                        id: `connection-${timestamp}-${index}`,
+                        source: newSourceId,
+                        target: newTargetId,
+                      };
+                      addConnection(newConnection);
+                    }
+                  });
+                  
+                  // Select the newly pasted nodes
+                  setTimeout(() => {
+                    setNodes(nds => nds.map(node => ({
+                      ...node,
+                      selected: newNodeIds.includes(node.id)
+                    })));
+                  }, 100);
+                  
+                  console.log('Pasted nodes from sessionStorage:', data.nodes.length);
+                }
+              } catch (storageErr) {
+                console.error('Failed to paste from sessionStorage:', storageErr);
+              }
+            } else {
+              console.log('No valid data in clipboard or sessionStorage');
+            }
+          }
+        }).catch(err => {
+          // Could not read from clipboard (permissions issue), try sessionStorage
+          console.log('Could not read from system clipboard, trying sessionStorage:', err);
+          
+          const clipboardData = sessionStorage.getItem('systema-clipboard');
+          if (clipboardData) {
+            try {
+              const data = JSON.parse(clipboardData);
+              
+              if (data.type === 'systema-nodes' && data.nodes) {
+                // Paste nodes
+                const idMap = new Map<string, string>();
+                const timestamp = Date.now();
+                const newNodeIds: string[] = [];
+                
+                data.nodes.forEach((component: Component, index: number) => {
+                  const newId = `component-${timestamp}-${index}`;
+                  idMap.set(component.id, newId);
+                  newNodeIds.push(newId);
+                  
+                  const newComponent = {
+                    ...component,
+                    id: newId,
+                    name: `${component.name} (Copy)`,
+                    position: {
+                      x: component.position.x + 50,
+                      y: component.position.y + 50,
+                    },
+                  };
+                  addComponent(newComponent);
+                });
+                
+                // Paste connections
+                data.connections?.forEach((connection: Connection, index: number) => {
+                  const newSourceId = idMap.get(connection.source);
+                  const newTargetId = idMap.get(connection.target);
+                  
+                  if (newSourceId && newTargetId) {
+                    const newConnection = {
+                      ...connection,
+                      id: `connection-${timestamp}-${index}`,
+                      source: newSourceId,
+                      target: newTargetId,
+                    };
+                    addConnection(newConnection);
+                  }
+                });
+                
+                // Select the newly pasted nodes
+                setTimeout(() => {
+                  setNodes(nds => nds.map(node => ({
+                    ...node,
+                    selected: newNodeIds.includes(node.id)
+                  })));
+                }, 100);
+                
+                console.log('Pasted nodes from sessionStorage:', data.nodes.length);
+              }
+            } catch (storageErr) {
+              console.error('Failed to paste from sessionStorage:', storageErr);
+            }
+          }
+        });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [nodes, edges, currentArchitecture, addComponent, addConnection, undo, redo, canUndo, canRedo, setNodes]);
 
   return (
     <div ref={canvasRef} className="w-full h-full bg-system-bg">
@@ -322,8 +698,10 @@ const ArchitectureCanvasInner = () => {
         onConnect={onConnect}
         onNodeDragStop={onNodeDragStop}
         onNodeClick={onNodeClick}
+        onNodeDoubleClick={onNodeDoubleClick}
         onNodeContextMenu={onNodeContextMenu}
         onSelectionContextMenu={onSelectionContextMenu}
+        onEdgeContextMenu={onEdgeContextMenu}
         onPaneContextMenu={onPaneContextMenu}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
@@ -337,6 +715,7 @@ const ArchitectureCanvasInner = () => {
         snapToGrid
         snapGrid={[15, 15]}
         className="bg-system-bg"
+        style={{ userSelect: 'none' }}
       >
         <Background color="#333" gap={15} />
         
@@ -470,6 +849,26 @@ const ArchitectureCanvasInner = () => {
           >
             <Plus className="w-4 h-4" />
             <span>Add Component</span>
+          </button>
+        </div>
+      )}
+
+      {/* Edge Context Menu (right-click on connection) */}
+      {edgeContextMenu && (
+        <div
+          className="fixed bg-system-bg border border-system-border rounded shadow-lg py-1 z-[9999] min-w-[180px]"
+          style={{
+            left: `${edgeContextMenu.x}px`,
+            top: `${edgeContextMenu.y}px`,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={handleDeleteEdge}
+            className="w-full px-4 py-2 text-left text-red-400 hover:bg-red-900/20 transition-colors flex items-center gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>Delete Connection</span>
           </button>
         </div>
       )}
