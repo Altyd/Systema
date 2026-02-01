@@ -49,8 +49,6 @@ Soft enforcement that warns when:
 - Change log
 - Version history and snapshots
 
-**Important:** If collaborators cannot see shared architectures, run the SQL in `supabase_rls_fix.sql` in your Supabase SQL Editor to fix the RLS policies.
-
 ### Export & Sharing
 - Export to PNG, PDF, JSON/YAML
 - Public read-only links
@@ -147,10 +145,10 @@ Systema/
 - `Delete` - Remove selected node/edge
 - `Cmd/Ctrl + S` - Save architecture
 
-## Roadmap
+## Possible Extensions
 
 - [ ] AI advisory features (architecture explanation, risk summary)
-- [ ] Drawing tools (freehand, shapes, text annotations)
+- [ ] Structured annotations (non-freeform)
 - [ ] Real-time collaboration
 - [ ] Advanced export options (SVG, embedded HTML)
 - [ ] Architecture templates
@@ -175,6 +173,14 @@ This is a philosophical tool. Before contributing:
 ## License
 
 MIT
+
+## Documentation
+
+Additional documentation is available in the [`docs/`](docs/) folder:
+- [Quick Start Guide](docs/QUICKSTART.md)
+- [Project Structure](docs/PROJECT_STRUCTURE.md)
+- [Development Roadmap](docs/DEVELOPMENT_ROADMAP.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
 
 ## Support
 

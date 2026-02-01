@@ -1,6 +1,17 @@
-# SystemA - Installation Troubleshooting Guide
+# SystemA - Troubleshooting Guide
 
-## Issue: "ENOSPC: no space left on device"
+## Collaboration Issues
+
+### Collaborators Cannot See Shared Architectures
+
+If collaborators cannot see architectures that have been shared with them, this is likely due to Row Level Security (RLS) policies in Supabase.
+
+**Solution:**
+Run the SQL script in `supabase_rls_fix.sql` in your Supabase SQL Editor. This will update the RLS policies to properly handle shared architectures.
+
+## Installation Issues
+
+### Issue: "ENOSPC: no space left on device"
 
 This error occurs when there's insufficient disk space to install npm packages.
 
