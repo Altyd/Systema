@@ -148,11 +148,13 @@ Systema/
 ## Possible Extensions
 
 - [ ] AI advisory features (architecture explanation, risk summary)
-- [ ] Structured annotations (non-freeform)
+- [ ] Connection editing panel (edit edge metadata)
 - [ ] Real-time collaboration
-- [ ] Advanced export options (SVG, embedded HTML)
+- [ ] Advanced export options (PNG, PDF, SVG, embedded HTML)
 - [ ] Architecture templates
 - [ ] Dependency analysis tools
+- [ ] Comments and annotations system
+- [ ] Version history and snapshots UI
 - [ ] Integration with documentation systems
 
 ## Design Principles
@@ -180,7 +182,6 @@ Additional documentation is available in the [`docs/`](docs/) folder:
 - [Quick Start Guide](docs/QUICKSTART.md)
 - [Project Structure](docs/PROJECT_STRUCTURE.md)
 - [Possible Extensions](docs/POSSIBLE_EXTENSIONS.md)
-- [Troubleshooting](docs/TROUBLESHOOTING.md)
 
 ## Support
 

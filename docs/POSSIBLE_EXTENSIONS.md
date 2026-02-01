@@ -1,68 +1,66 @@
 # Development Roadmap - Priority Implementation Guide
 
-## Phase 1: Core Functionality (Week 1)
+## Phase 1: Core Functionality ✅ COMPLETED
 
-### 1. Authentication System
-**Priority**: CRITICAL
-**Files to create**:
+### 1. Authentication System ✅
+**Status**: COMPLETE
+**Files**:
 ```
-src/components/auth/AuthModal.tsx
-src/hooks/useAuth.ts
-src/contexts/AuthContext.tsx
-```
-
-**Implementation**:
-```typescript
-// useAuth.ts hook structure
-export const useAuth = () => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  
-  const signUp = async (email, password) => { /* Supabase auth */ };
-  const signIn = async (email, password) => { /* Supabase auth */ };
-  const signOut = async () => { /* Supabase auth */ };
-  
-  return { user, loading, signUp, signIn, signOut };
-};
+src/components/auth/AuthModal.tsx         ✅
+src/contexts/AuthContext.tsx              ✅
 ```
 
-### 2. Save/Load Architecture
-**Priority**: CRITICAL
-**Files to create**:
+**Implemented**:
+- Full Supabase authentication
+- Sign up, sign in, sign out
+- User persistence and session management
+- Protected actions (save requires auth)
+
+### 2. Save/Load Architecture ✅
+**Status**: COMPLETE
+**Files**:
 ```
-src/services/architectureService.ts
+src/lib/architectureService.ts            ✅
 ```
 
-**Key functions**:
-```typescript
-export const architectureService = {
-  save: async (architecture: Architecture) => { /* Insert/update */ },
-  load: async (id: string) => { /* Fetch by ID */ },
-  list: async (userId: string) => { /* List user's architectures */ },
-  delete: async (id: string) => { /* Soft delete */ },
-};
+**Implemented**:
+- Save to Supabase (insert/update)
+- Auto-load user's latest architecture
+- Load architecture modal
+- Create new architectures
+- Manual save with status feedback
+
+### 3. Add Component Modal ✅
+**Status**: COMPLETE
+**Files**:
+```
+src/components/modals/AddComponentModal.tsx  ✅
 ```
 
-**Integration points**:
-- Update `App.tsx` header "Save" button
-- Add "Load" functionality
-- Auto-save on changes (debounced)
-
-### 3. Add Component Modal
-**Priority**: HIGH
-**Files to create**:
-```
-src/components/modals/AddComponentModal.tsx
-```
-
-**Features**:
-- Form with all required fields
-- Position component at canvas center
+**Implemented**:
+- Full form with all required fields
+- Position component at canvas center or click location
 - Add to store on creation
-- Close modal after creation
+- Integrated with "Add Component" button
 
-**Update**:
-- Wire up "Add Component" button in `ArchitectureCanvas.tsx`
+### 4. Tutorial System ✅
+**Status**: COMPLETE
+**Files**:
+```
+src/components/tutorial/Tutorial.tsx         ✅
+src/components/tutorial/TutorialPrompt.tsx   ✅
+src/components/tutorial/TutorialSteps.ts     ✅
+```
+
+**Implemented**:
+- Interactive step-by-step guide
+- Element highlighting
+- First-time user onboarding
+- Dismissible prompt
+
+---
+
+## Phase 2: High Priority Features (In Progress)
 
 ### 4. Connection Editing Panel
 **Priority**: HIGH
@@ -80,23 +78,26 @@ src/components/panels/ConnectionPanel.tsx
 
 ---
 
-## Phase 2: Collaboration (Week 2)
+## Phase 3: Collaboration Features (Partial)
 
-### 5. Architecture List/Management
-**Files to create**:
+### 5. Architecture Management ✅ (Partial)
+**Status**: PARTIAL - Load works, delete pending
+**Files**:
 ```
-src/components/ArchitectureList.tsx
-src/pages/Dashboard.tsx
+src/components/modals/LoadArchitectureModal.tsx  ✅
 ```
 
-**Features**:
-- Grid/list of architectures
-- Create new (empty template)
-- Delete existing
-- Search/filter
-- Last modified date
+**Implemented**:
+- Load architecture modal with search
+- Create new architecture
+- Display user's architectures
 
-### 6. Collaboration Modal
+**TODO**:
+- Delete architecture functionality
+- Grid/list view toggle
+- Advanced filters
+
+### 6. Collaboration Modal ✅ (Frontend)
 **Files to create**:
 ```
 src/components/modals/CollaborationModal.tsx
@@ -128,7 +129,23 @@ src/services/commentService.ts
 
 ## Phase 3: Export & History (Week 3)
 
-### 8. Export Functionality
+### 7. Export Functionality ✅ (Partial)
+**Status**: JSON complete, PNG/PDF pending
+**Location**: Implemented in `src/App.tsx`
+
+**Completed**:
+- JSON export working
+
+**TODO**:
+- PNG export (html-to-image)
+- PDF export (jsPDF)
+- SVG export
+
+---
+
+## Phase 4: Medium Priority
+
+### 8. Comments System
 **Files to create**:
 ```
 src/services/exportService.ts
@@ -232,8 +249,6 @@ src/components/panels/AIAdvisoryPanel.tsx
 **File**: `src/hooks/useKeyboardShortcuts.ts`
 - Save: Cmd/Ctrl + S
 - Delete: Delete/Backspace
-- Undo: Cmd/Ctrl + Z
-- Redo: Cmd/Ctrl + Shift + Z
 
 ### B. Dark Mode Polish
 **File**: `src/index.css`

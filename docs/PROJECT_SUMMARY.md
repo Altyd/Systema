@@ -129,52 +129,56 @@ Included demo showing:
 
 ## What Still Needs Implementation
 
+### ✅ Recently Completed
+
+1. **Authentication** ✅
+   - `src/components/auth/AuthModal.tsx` - Complete
+   - `src/contexts/AuthContext.tsx` - Complete
+   - Sign up, sign in, sign out all working
+
+2. **Save/Load from Supabase** ✅
+   - `src/lib/architectureService.ts` - Complete
+   - Auto-load user's latest architecture
+   - Manual save with status feedback
+   - Create new architectures
+
+3. **Component Creation Modal** ✅
+   - `src/components/modals/AddComponentModal.tsx` - Complete
+   - Full form for creating components
+   - Positioned where clicked
+
+4. **Tutorial System** ✅
+   - `src/components/tutorial/Tutorial.tsx` - Complete
+   - Interactive step-by-step guide
+   - First-time user onboarding
+
+5. **Wiki/Documentation Modal** ✅
+   - `src/components/modals/WikiModal.tsx` - Complete
+   - In-app documentation access
+
 ### 🔨 High Priority
 
-1. **Component Creation Modal**
-   - Current: "Add Component" button exists but needs modal
-   - Need: Form to create new components from scratch
-   - Location: New file `src/components/modals/AddComponentModal.tsx`
+1. **Architecture Management** ✅ (Partial)
+   - Load architecture modal exists
+   - Create new architecture works
+   - Delete functionality pending
 
-2. **Connection Metadata Panel**
-   - Current: Can create connections, can't edit them
-   - Need: Panel similar to component metadata for editing edges
-   - Location: New file `src/components/panels/ConnectionPanel.tsx`
+2. **Collaboration UI** ✅ (Partial)
+   - `src/components/modals/CollaborateModal.tsx` - Created
+   - UI exists but needs backend integration
 
-3. **Save/Load from Supabase**
-   - Current: Demo architecture loads from code
-   - Need: Actual database persistence
-   - Files to create:
-     - `src/services/architectureService.ts`
-     - Update `src/App.tsx` with save/load logic
-
-4. **Authentication**
-   - Current: No auth flow
-   - Need: Sign up, sign in, sign out
-   - Files to create:
-     - `src/components/auth/AuthModal.tsx`
-     - `src/hooks/useAuth.ts`
+3. **Export Functionality** ✅ (Partial)
+   - JSON export - Complete
+   - PNG/PDF export - Pending
 
 ### 🔨 Medium Priority
 
-5. **Architecture Management**
-   - List user's architectures
-   - Create new / delete existing
-   - Location: New file `src/components/ArchitectureList.tsx`
+4. **Connection Metadata Panel**
+   - Edit connection properties
+   - Contract, failure behavior, retry policies
+   - Similar to component metadata panel
 
-6. **Collaboration UI**
-   - Invite users by email
-   - Manage roles
-   - View collaborators
-   - Location: New file `src/components/modals/CollaborationModal.tsx`
-
-7. **Export Functionality**
-   - PNG export (use html-to-image)
-   - PDF export (use jsPDF)
-   - JSON/YAML export
-   - Location: New file `src/services/exportService.ts`
-
-8. **Comments System**
+5. **Comments System**
    - Add inline comments
    - Reply to comments
    - Resolve/unresolve
@@ -221,13 +225,25 @@ Systema/
 │   │   ├── panels/
 │   │   │   ├── MetadataPanel.tsx          ✅ Component editor
 │   │   │   └── ValidationPanel.tsx        ✅ Validation warnings
-│   │   ├── modals/                        ❌ TO DO
-│   │   ├── auth/                          ❌ TO DO
+│   │   ├── modals/
+│   │   │   ├── AddComponentModal.tsx      ✅ Component creation
+│   │   │   ├── CollaborateModal.tsx       ✅ Collaboration UI
+│   │   │   ├── LoadArchitectureModal.tsx  ✅ Load architectures
+│   │   │   └── WikiModal.tsx              ✅ Documentation
+│   │   ├── auth/
+│   │   │   └── AuthModal.tsx              ✅ Sign in/up/out
+│   │   ├── tutorial/
+│   │   │   ├── Tutorial.tsx               ✅ Tutorial system
+│   │   │   ├── TutorialPrompt.tsx         ✅ Tutorial prompt
+│   │   │   └── TutorialSteps.ts           ✅ Tutorial steps
 │   │   └── comments/                      ❌ TO DO
 │   ├── store/
 │   │   └── architectureStore.ts           ✅ State management
-│   ├── services/                          ❌ TO DO (save/export)
-│   ├── hooks/                             ❌ TO DO (useAuth, etc)
+│   ├── contexts/
+│   │   └── AuthContext.tsx                ✅ Auth context
+│   ├── lib/
+│   │   ├── architectureService.ts         ✅ Save/load service
+│   │   └── supabase.ts                    ✅ Supabase client
 │   ├── lib/
 │   │   └── supabase.ts                    ✅ Supabase client
 │   ├── types/
@@ -259,7 +275,7 @@ Systema/
 
 ## Current State
 
-**Status**: Core architecture is 70% complete
+**Status**: Core architecture is 85% complete
 
 **Working**:
 - ✅ Canvas with node editing
@@ -269,15 +285,23 @@ Systema/
 - ✅ Simulation mode
 - ✅ Demo architecture
 - ✅ Database schema
+- ✅ Authentication (sign up, sign in, sign out)
+- ✅ Saving to database (auto-load, manual save)
+- ✅ Creating new components via UI (modal)
+- ✅ Load architecture modal
+- ✅ Tutorial system
+- ✅ JSON export
+
+**Partially Working**:
+- ⚠️ Collaboration UI (frontend exists, needs backend integration)
+- ⚠️ Architecture management (load works, delete pending)
 
 **Not Working Yet**:
-- ❌ Authentication
-- ❌ Saving to database
-- ❌ Creating new components via UI
-- ❌ Collaboration features
-- ❌ Export functionality
-- ❌ Comments
-- ❌ Version history
+- ❌ Connection editing panel
+- ❌ PNG/PDF export
+- ❌ Comments system
+- ❌ Version history/snapshots
+- ❌ Real-time collaboration
 
 ## Next Steps for Developer
 

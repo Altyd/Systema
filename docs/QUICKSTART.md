@@ -81,38 +81,64 @@ Navigate to: http://localhost:5173
 
 ## Demo Features to Try
 
-1. **Explore the demo architecture**
-   - Zoom/pan the canvas
+1. **Sign up / Sign in**
+   - Click "Sign In" in top right
+   - Create an account or sign in
+   - Your architectures will be saved automatically
+
+2. **Explore the demo architecture**
+   - Zoom/pan the canvas (scroll to zoom, drag to pan)
    - Click nodes to see details
    - Hover over connections
 
-2. **Edit a component**
+3. **Edit a component**
    - Click on "API Gateway" node
    - Metadata panel opens on right
    - Edit fields and save
 
-3. **Simulation mode**
+4. **Add a new component**
+   - Click "+ Add Component" button in toolbar
+   - Fill in the form
+   - Component appears on canvas
+
+5. **Simulation mode**
    - Click "Start Simulation" button
    - Click on a node to toggle failure
-   - Observe visual changes
+   - Observe visual changes (components turn red)
 
-4. **Validation warnings**
+6. **Validation warnings**
    - Check bottom-left for warnings
    - Click "Background Worker" (has no failure modes)
    - See warning about missing data
 
-5. **Add a connection**
+7. **Add a connection**
    - Drag from the white dot on right side of a node
    - Connect to white dot on left side of another node
    - New edge is created
 
+8. **Save your work**
+   - Click "Save" button (requires sign-in)
+   - Architecture is saved to your account
+
+9. **Load architectures**
+   - Click "Load" button
+   - See your saved architectures
+   - Click to load any architecture
+
+10. **Tutorial**
+    - Click graduation cap icon
+    - Follow interactive guide
+    - Learn all features step-by-step
+
 ## Next Steps
 
-- [ ] Add your own components
-- [ ] Define failure modes for all components
-- [ ] Add recovery strategies for critical components
-- [ ] Invite collaborators (requires Supabase auth setup)
-- [ ] Export your architecture
+- [ ] Complete the tutorial if you haven't already
+- [ ] Create your own architecture from scratch
+- [ ] Add your own components with failure modes
+- [ ] Define recovery strategies for critical components
+- [ ] Save and organize multiple architectures
+- [ ] Invite collaborators (share button in toolbar)
+- [ ] Export your architecture (JSON format)
 
 ## Support
 
