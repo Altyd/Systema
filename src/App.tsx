@@ -16,7 +16,7 @@ import { Save, FileText, Users, Download, LogOut, LogIn, FolderOpen, Plus, Gradu
 import { createDemoArchitecture } from './data/demoArchitecture';
 
 function App() {
-  const { currentArchitecture, setCurrentArchitecture, updateArchitectureMetadata, selectedNodeId, toggleMetadataPanel } = useArchitectureStore();
+  const { currentArchitecture, setCurrentArchitecture, updateArchitectureMetadata } = useArchitectureStore();
   const { user, loading: authLoading, signOut } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isCollaborateModalOpen, setIsCollaborateModalOpen] = useState(false);
