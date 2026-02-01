@@ -805,9 +805,12 @@ const ArchitectureCanvasInner = () => {
           
           <button
             onClick={() => {
-              // TODO: Implement edit (open metadata panel)
               if (contextMenu.nodeIds.length === 1) {
                 setSelectedNodeId(contextMenu.nodeIds[0]);
+                // Open the metadata panel if it's not already open
+                if (!useArchitectureStore.getState().isMetadataPanelOpen) {
+                  toggleMetadataPanel();
+                }
               }
               setContextMenu(null);
             }}
