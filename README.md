@@ -179,7 +179,7 @@ MIT
 Additional documentation is available in the [`docs/`](docs/) folder:
 - [Quick Start Guide](docs/QUICKSTART.md)
 - [Project Structure](docs/PROJECT_STRUCTURE.md)
-- [Development Roadmap](docs/DEVELOPMENT_ROADMAP.md)
+- [Possible Extensions](docs/POSSIBLE_EXTENSIONS.md)
 - [Troubleshooting](docs/TROUBLESHOOTING.md)
 
 ## Support
