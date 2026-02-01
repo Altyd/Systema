@@ -342,13 +342,6 @@ const ArchitectureCanvasInner = () => {
         
         <Controls
           className="!bg-system-bg !border-system-border"
-          style={{
-            button: {
-              backgroundColor: '#000',
-              color: '#fff',
-              borderColor: '#fff',
-            },
-          }}
         />
         
         <MiniMap

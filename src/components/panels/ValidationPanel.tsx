@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useArchitectureStore } from '../../store/architectureStore';
-import { AlertTriangle, AlertCircle, X } from 'lucide-react';
+import { AlertTriangle, AlertCircle } from 'lucide-react';
 
 export const ValidationPanel = () => {
   const { warnings, validateArchitecture } = useArchitectureStore();
