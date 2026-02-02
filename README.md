@@ -16,7 +16,7 @@ A thinking tool for system architecture design. Not a diagramming tool, not a wh
 - Not an AI architect
 - Not a design showcase
 
-<video src="https://github.com/Altyd/Systema/assets/demo.mp4" controls></video>
+<video src="https://github.com/Altyd/Systema/docs/demo.mp4" controls></video>
 
 *Short screen recording of SystemA in use*
 
@@ -188,5 +188,6 @@ Additional documentation is available in the [`docs/`](docs/) folder:
 - [Possible Extensions](docs/POSSIBLE_EXTENSIONS.md)
 
 ## Support
+
 
 For issues, questions, or discussions, please open an issue on GitHub.
