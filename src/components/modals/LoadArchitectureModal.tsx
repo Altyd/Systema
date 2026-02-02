@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { X, Trash2, FolderOpen, Clock, Users, UserPlus } from 'lucide-react';
-import { loadUserArchitectures, deleteArchitecture, SavedArchitecture } from '../../lib/architectureService';
+import { X, Trash2, FolderOpen, Clock, Users, UserPlus, Edit2, Check } from 'lucide-react';
+import { loadUserArchitectures, deleteArchitecture, updateArchitectureMetadata, SavedArchitecture } from '../../lib/architectureService';
 import { Architecture } from '../../types';
+import { useArchitectureStore } from '../../store/architectureStore';
 
 interface LoadArchitectureModalProps {
   isOpen: boolean;
@@ -16,10 +17,14 @@ export const LoadArchitectureModal = ({
   userId,
   onLoad,
 }: LoadArchitectureModalProps) => {
+  const { currentArchitecture, updateArchitectureMetadata: updateStoreMetadata } = useArchitectureStore();
   const [architectures, setArchitectures] = useState<SavedArchitecture[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [editingDescription, setEditingDescription] = useState<string | null>(null);
+  const [editedDescription, setEditedDescription] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -40,7 +45,13 @@ export const LoadArchitectureModal = ({
   };
 
   const handleLoad = (saved: SavedArchitecture) => {
-    onLoad(saved.data);
+    // Ensure the architecture data has the latest description from the database
+    const architectureToLoad = {
+      ...saved.data,
+      description: saved.description, // Use the top-level description from the database
+      name: saved.name, // Also sync the name
+    };
+    onLoad(architectureToLoad);
     onClose();
   };
 
@@ -52,6 +63,42 @@ export const LoadArchitectureModal = ({
       setArchitectures(architectures.filter(a => a.id !== id));
       setDeleteConfirm(null);
     }
+  };
+
+  const handleStartEditDescription = (arch: SavedArchitecture) => {
+    setEditingDescription(arch.id);
+    setEditedDescription(arch.description);
+  };
+
+  const handleSaveDescription = async (archId: string) => {
+    if (editedDescription.trim() === '') return;
+    
+    setSaving(true);
+    const { error } = await updateArchitectureMetadata(archId, {
+      description: editedDescription.trim(),
+    });
+    
+    if (error) {
+      setError(error.message);
+    } else {
+      // Update local state
+      setArchitectures(architectures.map(a =>
+        a.id === archId ? { ...a, description: editedDescription.trim() } : a
+      ));
+      
+      // Update the store if this is the currently loaded architecture
+      if (currentArchitecture?.id === archId) {
+        updateStoreMetadata({ description: editedDescription.trim() });
+      }
+      
+      setEditingDescription(null);
+    }
+    setSaving(false);
+  };
+
+  const handleCancelEditDescription = () => {
+    setEditingDescription(null);
+    setEditedDescription('');
   };
 
   const formatDate = (dateStr: string) => {
@@ -112,7 +159,52 @@ export const LoadArchitectureModal = ({
                 >
                   <div className="flex-1 min-w-0">
                     <h3 className="text-white font-medium truncate">{arch.name}</h3>
-                    <p className="text-gray-400 text-sm truncate">{arch.description}</p>
+                    {editingDescription === arch.id ? (
+                      <div className="flex items-center gap-2 mt-1">
+                        <input
+                          type="text"
+                          value={editedDescription}
+                          onChange={(e) => setEditedDescription(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveDescription(arch.id);
+                            if (e.key === 'Escape') handleCancelEditDescription();
+                          }}
+                          disabled={saving}
+                          className="flex-1 bg-system-bg border border-system-border rounded px-2 py-1 text-sm text-white focus:outline-none focus:ring-1 focus:ring-white"
+                          placeholder="Architecture description"
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => handleSaveDescription(arch.id)}
+                          disabled={saving}
+                          className="p-1 text-green-400 hover:text-green-300 transition-colors"
+                          title="Save"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={handleCancelEditDescription}
+                          disabled={saving}
+                          className="p-1 text-gray-400 hover:text-white transition-colors"
+                          title="Cancel"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 group">
+                        <p className="text-gray-400 text-sm truncate flex-1">{arch.description}</p>
+                        {arch.created_by === userId && (
+                          <button
+                            onClick={() => handleStartEditDescription(arch)}
+                            className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-white transition-all"
+                            title="Edit description"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    )}
                     <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />

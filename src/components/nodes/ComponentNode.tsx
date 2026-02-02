@@ -33,8 +33,9 @@ const getIconForType = (type: Component['type']) => {
   }
 };
 
-const getCriticalityColor = (criticality: Component['criticality'], isFailed?: boolean) => {
+const getCriticalityColor = (criticality: Component['criticality'], isFailed?: boolean, isNotWorking?: boolean) => {
   if (isFailed) return 'border-red-500 bg-red-900/20';
+  if (isNotWorking) return 'border-orange-500 bg-orange-900/20';
   
   switch (criticality) {
     case 'high':
@@ -57,7 +58,7 @@ export const ComponentNode = memo(({ data, selected }: NodeProps<Component & { i
     <div
       className={clsx(
         'min-w-[200px] bg-system-bg border-2 rounded-lg p-4 transition-all duration-300',
-        getCriticalityColor(data.criticality, data.isFailed),
+        getCriticalityColor(data.criticality, data.isFailed, data.isNotWorking),
         selected && 'ring-2 ring-white ring-offset-2 ring-offset-black',
         isControl && 'border-dashed',
         isExternal && 'border-dotted',
@@ -73,7 +74,7 @@ export const ComponentNode = memo(({ data, selected }: NodeProps<Component & { i
       <div className="flex items-start gap-3">
         <Icon className={clsx(
           'w-6 h-6 flex-shrink-0',
-          data.isFailed ? 'text-red-500' : 'text-white'
+          data.isFailed ? 'text-red-500' : data.isNotWorking ? 'text-orange-500' : 'text-white'
         )} />
         
         <div className="flex-1 min-w-0">

@@ -197,6 +197,44 @@ export async function loadArchitecture(
   }
 }
 
+// Update architecture metadata (name or description) without changing the full architecture data
+export async function updateArchitectureMetadata(
+  architectureId: string,
+  updates: { name?: string; description?: string }
+): Promise<{ error: Error | null }> {
+  try {
+    // First, get the current data
+    const { data: currentArch, error: fetchError } = await supabase
+      .from('architectures')
+      .select('data')
+      .eq('id', architectureId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    // Update both top-level fields and the data.name/description
+    const updatedData = {
+      ...currentArch.data,
+      ...(updates.name && { name: updates.name }),
+      ...(updates.description && { description: updates.description }),
+    };
+
+    const { error } = await supabase
+      .from('architectures')
+      .update({
+        ...updates,
+        data: updatedData,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', architectureId);
+
+    if (error) throw error;
+    return { error: null };
+  } catch (error) {
+    return { error: error as Error };
+  }
+}
+
 // Delete architecture
 export async function deleteArchitecture(
   architectureId: string

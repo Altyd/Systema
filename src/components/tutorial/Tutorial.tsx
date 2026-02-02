@@ -74,7 +74,13 @@ export const Tutorial = ({ isOpen, onClose }: TutorialProps) => {
     if ((step.id === 'failure-modes' || step.id === 'recovery-strategies') && !isMetadataPanelOpen) {
       const node = document.querySelector('.react-flow__node');
       if (node) {
-        (node as HTMLElement).click();
+        // Double-click to open metadata panel
+        const doubleClickEvent = new MouseEvent('dblclick', {
+          view: window,
+          bubbles: true,
+          cancelable: true
+        });
+        node.dispatchEvent(doubleClickEvent);
       }
     }
 

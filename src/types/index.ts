@@ -58,6 +58,7 @@ export interface Component {
   // Visual properties
   position: { x: number; y: number };
   isFailed?: boolean; // For simulation
+  isNotWorking?: boolean; // Marked as not working (persisted)
 }
 
 export interface Connection {

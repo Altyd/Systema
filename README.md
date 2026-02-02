@@ -16,6 +16,10 @@ A thinking tool for system architecture design. Not a diagramming tool, not a wh
 - Not an AI architect
 - Not a design showcase
 
+<video src="https://github.com/Altyd/Systema/assets/demo.mp4" controls></video>
+
+*Short screen recording of SystemA in use*
+
 ## Features
 
 ### Core Architecture Design

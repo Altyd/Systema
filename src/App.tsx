@@ -11,7 +11,7 @@ import { TutorialPrompt } from './components/tutorial/TutorialPrompt';
 import { useArchitectureStore } from './store/architectureStore';
 import { useAuth } from './contexts/AuthContext';
 import { Architecture } from './types';
-import { saveArchitecture, loadUserArchitectures } from './lib/architectureService';
+import { saveArchitecture, loadUserArchitectures, updateArchitectureMetadata as updateArchitectureMetadataDB } from './lib/architectureService';
 import { Save, FileText, Users, Download, LogOut, LogIn, FolderOpen, Plus, GraduationCap, BookOpen } from 'lucide-react';
 import { createDemoArchitecture } from './data/demoArchitecture';
 
@@ -26,6 +26,8 @@ function App() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [isEditingName, setIsEditingName] = useState(false);
   const [editingName, setEditingName] = useState('');
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [editingDescription, setEditingDescription] = useState('');
   const [isLoadingArchitecture, setIsLoadingArchitecture] = useState(true);
   const [loadedForUserId, setLoadedForUserId] = useState<string | null>(null);
   const [showTutorialPrompt, setShowTutorialPrompt] = useState(false);
@@ -56,6 +58,9 @@ function App() {
           const latestArch = architectures[0];
           const loadedArchitecture: Architecture = {
             ...latestArch.data,
+            // Ensure we use the latest name and description from the database table
+            name: latestArch.name,
+            description: latestArch.description,
             id: latestArch.id,
             createdBy: latestArch.created_by,
             createdAt: latestArch.created_at,
@@ -146,6 +151,34 @@ function App() {
   const handleCancelEditName = () => {
     setIsEditingName(false);
     setEditingName('');
+  };
+
+  const handleStartEditDescription = () => {
+    if (currentArchitecture) {
+      setEditingDescription(currentArchitecture.description);
+      setIsEditingDescription(true);
+    }
+  };
+
+  const handleSaveDescription = async () => {
+    if (editingDescription.trim() && currentArchitecture) {
+      // Update local store
+      updateArchitectureMetadata({ description: editingDescription.trim() });
+      
+      // Also save to database if the architecture has been saved before
+      if (currentArchitecture.id !== 'demo-1' && user) {
+        await updateArchitectureMetadataDB(currentArchitecture.id, {
+          description: editingDescription.trim(),
+        });
+      }
+      
+      setIsEditingDescription(false);
+    }
+  };
+
+  const handleCancelEditDescription = () => {
+    setIsEditingDescription(false);
+    setEditingDescription('');
   };
 
   const handleStartTutorial = () => {
@@ -406,7 +439,30 @@ function App() {
               </div>
               <div>
                 <span className="text-gray-400">Description:</span>
-                <p className="text-white">{currentArchitecture.description}</p>
+                {isEditingDescription ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <textarea
+                      value={editingDescription}
+                      onChange={(e) => setEditingDescription(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && e.ctrlKey) handleSaveDescription();
+                        if (e.key === 'Escape') handleCancelEditDescription();
+                      }}
+                      onBlur={handleSaveDescription}
+                      autoFocus
+                      rows={3}
+                      className="bg-system-bg border border-system-border rounded px-2 py-1 text-sm text-white focus:outline-none focus:ring-1 focus:ring-white flex-1 resize-none"
+                    />
+                  </div>
+                ) : (
+                  <p 
+                    className="text-white cursor-pointer hover:text-gray-300 transition-colors"
+                    onClick={handleStartEditDescription}
+                    title="Click to edit description (Ctrl+Enter to save)"
+                  >
+                    {currentArchitecture.description}
+                  </p>
+                )}
               </div>
               <div>
                 <span className="text-gray-400">Problem Statement:</span>

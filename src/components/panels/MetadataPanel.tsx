@@ -259,6 +259,23 @@ const MetadataPanelContent = ({ component, onUpdate, onClose }: MetadataPanelCon
                 </select>
               </div>
             </div>
+
+            <div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={localComponent.isNotWorking || false}
+                  onChange={(e) => updateField('isNotWorking', e.target.checked)}
+                  className="w-4 h-4 bg-system-bg border border-system-border rounded focus:outline-none focus:ring-1 focus:ring-white"
+                />
+                <span className="text-xs text-gray-400">Mark as Not Working (persisted on save)</span>
+              </label>
+              {localComponent.isNotWorking && (
+                <p className="text-xs text-orange-400 mt-1 ml-6">
+                  This component will be displayed with an orange border and saved as not working.
+                </p>
+              )}
+            </div>
           </div>
         </section>
 
